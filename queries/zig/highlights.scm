@@ -1,235 +1,195 @@
-(line_comment) @comment @spell
+(line_comment) @comment
+(doc_comment) @comment
 
 [
-  (container_doc_comment)
-  (doc_comment)
-] @comment.documentation @spell
+  ".{"
+  "("
+  ")"
+  "["
+  "]"
+  "{"
+  "}"
+] @punctuation.bracket
 
 [
-  variable: (IDENTIFIER)
-  variable_type_function: (IDENTIFIER)
-] @variable
+  ":"
+  ";"
+  "."
+  ","
+] @punctuation.delimiter
 
-parameter: (IDENTIFIER) @variable.parameter
+(identifier) @variable
 
+(field_identifier) @variable.member
+(parameter
+  (identifier) @variable.parameter)
+
+((identifier) @type
+  (#lua-match? @type "^[A-Z][a-z]*[a-zA-Z]*$"))
+
+((identifier) @constant
+  (#lua-match? @constant "^[A-Z%d_]+$"))
+
+(function_signature
+  name: (identifier) @function)
+
+(function_declaration
+  name: (identifier) @function)
+
+(call_expression
+  function: (identifier) @function.call)
+
+(build_in_call_expr
+  function: (identifier) @function.builtin)
+
+; other identifiers
 [
-  field_member: (IDENTIFIER)
-  field_access: (IDENTIFIER)
-] @variable.member
-
-; assume TitleCase is a type
-([
-  variable_type_function: (IDENTIFIER)
-  field_access: (IDENTIFIER)
-  parameter: (IDENTIFIER)
+  (type_identifier)
+  (enum_identifier)
 ] @type
-  (#lua-match? @type "^%u([%l]+[%u%l%d]*)*$"))
 
-; assume camelCase is a function
-([
-  variable_type_function: (IDENTIFIER)
-  field_access: (IDENTIFIER)
-  parameter: (IDENTIFIER)
-] @function
-  (#lua-match? @function "^%l+([%u][%l%d]*)+$"))
-
-; assume all CAPS_1 is a constant
-([
-  variable_type_function: (IDENTIFIER)
-  field_access: (IDENTIFIER)
-] @constant
-  (#lua-match? @constant "^%u[%u%d_]+$"))
-
-function: (IDENTIFIER) @function
-
-function_call: (IDENTIFIER) @function.call
-
-exception: "!" @keyword.exception
-
-((IDENTIFIER) @variable.builtin
-  (#eq? @variable.builtin "_"))
-
-(PtrTypeStart
-  "c" @variable.builtin)
-
-((ContainerDeclType
-  [
-    (ErrorUnionExpr)
-    "enum"
-  ])
-  (ContainerField
-    (IDENTIFIER) @constant))
-
-field_constant: (IDENTIFIER) @constant
-
-(BUILTINIDENTIFIER) @function.builtin
-
-((BUILTINIDENTIFIER) @keyword.import
-  (#any-of? @keyword.import "@import" "@cImport"))
-
-(INTEGER) @number
-
-(FLOAT) @number.float
+(primitive_type) @type.builtin
 
 [
-  "true"
-  "false"
-] @boolean
+  (integer_literal)
+  (float_literal)
+] @number
 
 [
-  (LINESTRING)
-  (STRINGLITERALSINGLE)
-] @string @spell
+  (boolean_literal)
+  (undefined_literal)
+  (null_literal)
+] @constant.builtin
 
-(CHAR_LITERAL) @character
+(char_literal) @character
 
-(EscapeSequence) @string.escape
+(string_literal) @string
+(multiline_string_literal
+  "\\\\" @string.special)
 
-(FormatSequence) @string.special
+(escape_sequence) @string.escape
 
-(BreakLabel
-  (IDENTIFIER) @label)
+(label_identifier) @attribute
 
-(BlockLabel
-  (IDENTIFIER) @label)
+(call_modifier) @keyword.modifier ; async
 
-[
-  "asm"
-  "defer"
-  "errdefer"
-  "test"
-  "opaque"
-  "error"
-  "const"
-  "var"
-] @keyword
+(binary_operator) @operator
 
 [
-  "struct"
-  "union"
-  "enum"
-] @keyword.type
-
-[
-  "async"
+  "align"
+  "allowzero"
+  ; "and"
+  ; "anyframe"
+  ; "anytype"
+  ; "asm"
   "await"
-  "suspend"
-  "nosuspend"
+  "break"
+  ; "callconv"
+  ; "catch"
+  "comptime"
+  "const"
+  "continue"
+  "defer"
+  "else"
+  "enum"
+  "errdefer"
+  "error"
+  "export"
+  "extern"
+  "false"
+  "for"
+  "if"
+  "inline"
+  ; "noalias"
+  ; "nosuspend"
+  ; "noinline"
+  "null"
+  ; "opaque"
+  ; "or"
+  ; "orelse"
+  ; "packed"
+  "pub"
   "resume"
-] @keyword.coroutine
+  "return"
+  ; "linksection"
+  "struct"
+  "suspend"
+  "switch"
+  "test"
+  ; "threadlocal"
+  "true"
+  "try"
+  ; "undefined"
+  "union"
+  ;"unreachable"
+  "usingnamespace"
+  "var"
+  "volatile"
+  "while"
+] @keyword
 
 "fn" @keyword.function
 
 [
-  "and"
-  "or"
-  "orelse"
-] @keyword.operator
-
-"return" @keyword.return
-
-[
-  "if"
+  "continue"
   "else"
+  "if"
   "switch"
 ] @keyword.conditional
 
 [
   "for"
   "while"
-  "break"
-  "continue"
 ] @keyword.repeat
 
-[
-  "usingnamespace"
-  "export"
-] @keyword.import
+(assignment_modifier) @attribute
 
 [
-  "try"
-  "catch"
-] @keyword.exception
-
-[
-  "anytype"
-  (BuildinTypeExpr)
-] @type.builtin
-
-[
-  "volatile"
-  "allowzero"
-  "noalias"
-  "addrspace"
-  "align"
-  "callconv"
-  "linksection"
-  "pub"
-  "inline"
-  "noinline"
-  "extern"
-] @keyword.modifier
-
-[
-  "comptime"
-  "packed"
-  "threadlocal"
-] @attribute
-
-[
-  "null"
-  "unreachable"
-  "undefined"
-] @constant.builtin
-
-[
-  (CompareOp)
-  (BitwiseOp)
-  (BitShiftOp)
-  (AdditionOp)
-  (AssignOp)
-  (MultiplyOp)
-  (PrefixOp)
+  "&"
+  "&="
   "*"
-  "**"
-  "->"
-  ".?"
-  ".*"
-  "?"
-] @operator
-
-[
-  ";"
-  "."
-  ","
-  ":"
-  "=>"
-] @punctuation.delimiter
-
-[
+  "*="
+  ;"*%"
+  "*%="
+  ;"^"
+  "^="
+  ; ":"
+  ; ","
+  ; "."
   ".."
   "..."
-] @punctuation.special
-
-[
-  "["
-  "]"
-  "("
-  ")"
-  "{"
-  "}"
-] @punctuation.bracket
-
-(Payload
-  "|" @punctuation.bracket)
-
-(PtrPayload
-  "|" @punctuation.bracket)
-
-(PtrIndexPayload
-  "|" @punctuation.bracket)
-
-(ParamType
-  (ErrorUnionExpr
-    (SuffixExpr
-      variable_type_function: (IDENTIFIER) @type)))
+  ".*"
+  ".?"
+  "="
+  ;"=="
+  "=>"
+  "!"
+  ;"!="
+  ;"<"
+  ;"<<"
+  "<<="
+  ; "<="
+  "-"
+  "-="
+  "-%"
+  "-%="
+  ;"->"
+  ;"%"
+  "%="
+  "|"
+  ;"||"
+  "|="
+  ;"+"
+  ;"++"
+  "+="
+  ;"+%"
+  "+%="
+  "?"
+  ;">"
+  ;">>"
+  ">>="
+  ;">="
+  ;"/"
+  "/="
+  "~"
+] @operator
